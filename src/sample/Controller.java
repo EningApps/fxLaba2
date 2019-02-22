@@ -1,25 +1,24 @@
 package sample;
 
-import javafx.collections.ObservableList;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
-import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Random;
-import java.util.function.Function;
 
 public class Controller {
 
     @FXML
-    private AnchorPane rootContainer;
+    private GridPane valuesContainer;
     @FXML
     private Button randomButton;
     @FXML
@@ -37,10 +36,7 @@ public class Controller {
 
     private int[][] valuesMatrix = new int[MATRIX_SIZE][MATRIX_SIZE];
     private int[] valuesC = new int[MATRIX_SIZE];
-    private int[] valuesW = new int[MATRIX_SIZE];
-
-    private List<ChoiceBox> choiceBoxes = new ArrayList<>();
-
+    private float[] valuesW = new float[MATRIX_SIZE];
 
     @FXML
     public void initialize() {
@@ -48,35 +44,53 @@ public class Controller {
     }
 
     private void initViews() {
-        for (Node child : rootContainer.getChildren()) {
-            if (child instanceof ChoiceBox) {
-                choiceBoxes.add((ChoiceBox) child);
-                ((ChoiceBox) child).getSelectionModel().selectFirst();
+        for (int i = 0; i < MATRIX_SIZE; i++) {
+            for (int j = 0; j < MATRIX_SIZE; j++) {
+                if (i == j) {
+                    Label label = new Label();
+                    label.setText("   -");
+                    label.setPrefHeight(48);
+                    label.setPrefWidth(48);
+                    valuesContainer.add(label, i, j);
+                } else {
+                    ChoiceBox cb = new ChoiceBox(FXCollections.observableArrayList(0, 1));
+                    cb.getSelectionModel().selectFirst();
+                    cb.setPrefHeight(48);
+                    cb.setPrefWidth(48);
+                    valuesContainer.add(cb, i, j);
+                }
             }
         }
     }
 
+
     public void fillRandomValues(ActionEvent actionEvent) {
-        clearValues();
         setRandomValues();
         refreshValues();
+    }
+
+    private void refreshValues() {
+        clearValues();
+        updateValues();
         calculateC();
         calculateW();
     }
 
+
     private void clearValues() {
+        valuesMatrix = new int[MATRIX_SIZE][MATRIX_SIZE];
         valuesC = new int[MATRIX_SIZE];
-        valuesW = new int[MATRIX_SIZE];
+        valuesW = new float[MATRIX_SIZE];
     }
 
-    public void refreshValues() {
+    public void updateValues() {
         for (int i = 0; i < MATRIX_SIZE; i++) {
             for (int j = 0; j < MATRIX_SIZE; j++) {
                 if (i == j) {
                     continue;
                 } else {
                     try {
-                        valuesMatrix[i][j] = Integer.parseInt(choiceBoxes.get(i * MATRIX_SIZE + j).getValue().toString());
+                        valuesMatrix[i][j] = Integer.parseInt(getChoiceBoxFromGrid(i, j).getValue().toString());
                     } catch (Exception e) {
                         int x;
                     }
@@ -87,9 +101,14 @@ public class Controller {
 
     private void setRandomValues() {
         Random random = new Random();
-        for (ChoiceBox choiceBox: choiceBoxes) {
-            int value = (random.nextInt(11) + 1) / 10;
-            choiceBox.setValue(value);
+        for (int i = 0; i < MATRIX_SIZE; i++) {
+            for (int j = 0; j < MATRIX_SIZE; j++) {
+                int value = (random.nextInt(11) + 1) / 10;
+                ChoiceBox choiceBox = getChoiceBoxFromGrid(i, j);
+                if (choiceBox != null) {
+                    choiceBox.setValue(value);
+                }
+            }
         }
     }
 
@@ -106,7 +125,14 @@ public class Controller {
     }
 
     private void calculateW() {
-
+        float sum = Arrays.stream(valuesC).sum();
+        for (int i = 0; i < MATRIX_SIZE; i++) {
+                valuesW[i] = valuesC[i]/sum;
+        }
+        int i = 0;
+        for (Node children : containerW.getChildren()) {
+            ((Label) children).setText(String.format("%.3f",valuesW[i++]));
+        }
     }
 
 
@@ -114,6 +140,15 @@ public class Controller {
     }
 
     public void exit(ActionEvent actionEvent) {
+    }
+
+    private ChoiceBox getChoiceBoxFromGrid(int row, int col) {
+        for (Node node : valuesContainer.getChildren()) {
+            if (GridPane.getColumnIndex(node) == col && GridPane.getRowIndex(node) == row && node instanceof ChoiceBox) {
+                return (ChoiceBox) node;
+            }
+        }
+        return null;
     }
 }
 
