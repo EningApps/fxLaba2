@@ -14,7 +14,7 @@
             xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
     <children>
         <TextArea layoutX="47.0" layoutY="78.0" prefHeight="48.0" prefWidth="48.0" text=" -"/>
-        <TextField layoutX="95.0" layoutY="126.0" prefHeight="48.0" prefWidth="48.0"/>
+        <TextField layoutX="95.0" layoutY="126.0" prefHeight="48.0" prefWidth="48.0" text=" -"/>
         <TextArea layoutX="143.0" layoutY="174.0" prefHeight="48.0" prefWidth="48.0" text=" -"/>
         <TextArea layoutX="191.0" layoutY="222.0" prefHeight="48.0" prefWidth="48.0" text=" -"/>
         <TextArea layoutX="239.0" layoutY="270.0" prefHeight="48.0" prefWidth="48.0" text=" -"/>
@@ -22,7 +22,7 @@
             <items>
                 <FXCollections fx:factory="observableArrayList">
                     <Integer fx:value="0" />
-                    <Integer fx:value="1" />
+                    <Integer fx:value="1"/>
                 </FXCollections>
             </items>
         </ChoiceBox>
