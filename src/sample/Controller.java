@@ -14,11 +14,9 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.util.Pair;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Random;
+import java.util.*;
 
 public class Controller {
 
@@ -147,10 +145,19 @@ public class Controller {
     }
 
     private void setResult() {
-        StringBuilder stringBuilder = new StringBuilder();
-        Arrays.sort(valuesW, Comparator.reverseOrder());
+        List<Pair<Integer, Float>> valuesToIndex = new ArrayList();
         for (int i = 0; i < MATRIX_SIZE; i++) {
-            stringBuilder.append(String.format("Z%d = %.3f ; ", i, valuesW[i]));
+            valuesToIndex.add(new Pair(i+1, valuesW[i]));
+        }
+        StringBuilder stringBuilder = new StringBuilder();
+        Collections.sort(valuesToIndex, new Comparator<Pair<Integer, Float>>() {
+            @Override
+            public int compare(Pair<Integer, Float> pair1, Pair<Integer, Float> pair2) {
+                return Float.compare(pair2.getValue(), pair1.getValue());
+            }
+        });
+        for (int i = 0; i < valuesToIndex.size(); i++) {
+            stringBuilder.append(String.format("Z%d = %.3f ; ", valuesToIndex.get(i).getKey(), valuesToIndex.get(i).getValue()));
         }
         resultText.setText(stringBuilder.toString());
     }
