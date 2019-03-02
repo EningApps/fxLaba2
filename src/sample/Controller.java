@@ -1,17 +1,10 @@
 package sample;
 
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.util.Pair;
@@ -26,16 +19,23 @@ public class Controller {
     private TextArea resultText;
 
     @FXML
-    private Pane containerC;
+    private Spinner<Integer> rSpinner1;
+
+    @FXML
+    private Spinner<Integer> rSpinner2;
 
     @FXML
     private Pane containerW;
 
-    private static final int MATRIX_SIZE = 5;
+    private static final int MATRIX_ROWS = 3;
+    private static final int MATRIX_COLUMNS = 2;
 
-    private int[][] valuesMatrix = new int[MATRIX_SIZE][MATRIX_SIZE];
-    private int[] valuesC = new int[MATRIX_SIZE];
-    private Float[] valuesW = new Float[MATRIX_SIZE];
+    private static final int R1_DEFAULT = 7;
+    private static final int R2_DEFAULT = 8;
+
+    private int[][] valuesMatrix = new int[MATRIX_ROWS][MATRIX_ROWS];
+    private int[] valuesC = new int[MATRIX_ROWS];
+    private Float[] valuesW = new Float[MATRIX_ROWS];
 
     @FXML
     public void initialize() {
@@ -43,111 +43,50 @@ public class Controller {
     }
 
     private void initViews() {
-        EventHandler<ActionEvent> eventHandler = new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                refreshValues();
-            }
-        };
-        for (int i = 0; i < MATRIX_SIZE; i++) {
-            for (int j = 0; j < MATRIX_SIZE; j++) {
-                if (i == j) {
-                    Label label = new Label();
-                    label.setText("   -");
-                    label.setPrefHeight(48);
-                    label.setPrefWidth(48);
-                    valuesContainer.add(label, i, j);
-                } else {
-                    ChoiceBox cb = new ChoiceBox(FXCollections.observableArrayList(0, 1));
-                    cb.getSelectionModel().selectFirst();
-                    cb.setPrefHeight(48);
-                    cb.setPrefWidth(48);
-                    cb.setOnAction(eventHandler);
-                    valuesContainer.add(cb, i, j);
-                }
-            }
-        }
+        rSpinner1.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 10, R1_DEFAULT));
+        rSpinner2.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 10, R2_DEFAULT));
     }
 
-    public void fillRandomValues(ActionEvent actionEvent) {
-        setRandomValues();
-        refreshValues();
-    }
 
     public void exit(ActionEvent actionEvent) {
         Platform.exit();
     }
 
-    private void refreshValues() {
+    public void calculate() {
         clearValues();
-        updateValues();
-        calculateC();
         calculateW();
+        setValuesW();
         setResult();
     }
 
     private void clearValues() {
-        valuesMatrix = new int[MATRIX_SIZE][MATRIX_SIZE];
-        valuesC = new int[MATRIX_SIZE];
-        valuesW = new Float[MATRIX_SIZE];
-    }
-
-    private void updateValues() {
-        for (int i = 0; i < MATRIX_SIZE; i++) {
-            for (int j = 0; j < MATRIX_SIZE; j++) {
-                if (i == j) {
-                    continue;
-                } else {
-                    try {
-                        valuesMatrix[i][j] = Integer.parseInt(getChoiceBoxFromGrid(i, j).getValue().toString());
-                    } catch (Exception e) {
-                        int x;
-                    }
-                }
-            }
-        }
-    }
-
-    private void setRandomValues() {
-        Random random = new Random();
-        for (int i = 0; i < MATRIX_SIZE; i++) {
-            for (int j = 0; j < MATRIX_SIZE; j++) {
-                int value = (random.nextInt(11) + 1) / 10;
-                ChoiceBox choiceBox = getChoiceBoxFromGrid(i, j);
-                if (choiceBox != null) {
-                    choiceBox.setValue(value);
-                }
-            }
-        }
-    }
-
-    private void calculateC() {
-        for (int i = 0; i < MATRIX_SIZE; i++) {
-            for (int j = 0; j < MATRIX_SIZE; j++) {
-                valuesC[i] += valuesMatrix[i][j];
-            }
-        }
-        int i = 0;
-        for (Node children : containerC.getChildren()) {
-            ((Label) children).setText(String.valueOf(valuesC[i++]));
-        }
+        valuesW = new Float[MATRIX_ROWS];
     }
 
     private void calculateW() {
-        float sum = Arrays.stream(valuesC).sum();
-        for (int i = 0; i < MATRIX_SIZE; i++) {
-            valuesW[i] = valuesC[i] / sum;
+        int r1 = rSpinner1.getValue();
+        int r2 = rSpinner2.getValue();
+        float z1 = r1 * 1f / (r1 + r2);
+        float z2 = r2 * 1f / (r1 + r2);
+        for (int i = 0; i < MATRIX_ROWS; i++) {
+            float value1 = Float.parseFloat(getTextAreaFromGrid(i, 0).getText());
+            float value2 = Float.parseFloat(getTextAreaFromGrid(i, 1).getText());
+            float result = value1 * z1 + value2 * z2;
+            valuesW[i] = result;
         }
+    }
+
+    private void setValuesW() {
         int i = 0;
-        for (Node children : containerW.getChildren()) {
-            ((Label) children).setText(String.format("%.3f", valuesW[i++]));
+        for (Node wLabel : containerW.getChildren()) {
+            ((Label) wLabel).setText(String.format("%.4f",valuesW[i++]));
         }
     }
 
     private void setResult() {
         List<Pair<Integer, Float>> valuesToIndex = new ArrayList();
-        for (int i = 0; i < MATRIX_SIZE; i++) {
-            valuesToIndex.add(new Pair(i+1, valuesW[i]));
+        for (int i = 0; i < valuesW.length; i++) {
+            valuesToIndex.add(new Pair(i + 1, valuesW[i]));
         }
         StringBuilder stringBuilder = new StringBuilder();
         Collections.sort(valuesToIndex, new Comparator<Pair<Integer, Float>>() {
@@ -157,19 +96,20 @@ public class Controller {
             }
         });
         for (int i = 0; i < valuesToIndex.size(); i++) {
-            stringBuilder.append(String.format("Z%d = %.3f ; ", valuesToIndex.get(i).getKey(), valuesToIndex.get(i).getValue()));
+            stringBuilder.append(String.format("Z%d = %.4f ; ", valuesToIndex.get(i).getKey(), valuesToIndex.get(i).getValue()));
         }
         resultText.setText(stringBuilder.toString());
     }
 
-    private ChoiceBox getChoiceBoxFromGrid(int row, int col) {
+    private TextArea getTextAreaFromGrid(int row, int col) {
         for (Node node : valuesContainer.getChildren()) {
-            if (GridPane.getColumnIndex(node) == col && GridPane.getRowIndex(node) == row && node instanceof ChoiceBox) {
-                return (ChoiceBox) node;
+            if (valuesContainer.getColumnIndex(node) == col && valuesContainer.getRowIndex(node) == row && node instanceof TextArea) {
+                return (TextArea) node;
             }
         }
         return null;
     }
+
 }
 
 
